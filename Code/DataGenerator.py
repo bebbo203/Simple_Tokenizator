@@ -10,7 +10,7 @@ class DataGenerator(torch.utils.data.IterableDataset):
         self.sentences_max_length_computed = self.longest_sentence_size()
         self.tensor = tensor
         self.monograms = monograms
-        self.threshold = 150
+        self.threshold = 5
 
         if(sentences_max_length == 0):
             self.sentences_max_length = self.sentences_max_length_computed
@@ -35,9 +35,8 @@ class DataGenerator(torch.utils.data.IterableDataset):
                    
             for _line in self.file.readlines():
                 line = _line
-                for start in range(0, len(line), self.sentences_max_length):
-                    reduced = line[start:start+self.sentences_max_length]
-                    yield reduced
+                for c in line:
+                    yield c
         else:   
             if(self.monograms):
                 for _line in self.file.readlines():
@@ -46,6 +45,10 @@ class DataGenerator(torch.utils.data.IterableDataset):
                         if(line[c] in self.chars_dict.keys()):
                             out = torch.zeros(self.sentences_max_length, len(self.chars_dict))
                             out[0][self.chars_dict[line[c]]] = 1
+                        elif(line[c] != "\n"):
+                            out = torch.zeros(self.sentences_max_length, len(self.chars_dict))
+                            out[0][self.chars_dict["RANDOM"]] = 1
+
                         yield out.flatten().view(self.sentences_max_length * len(self.chars_dict))
             else:
                 for _line in self.file.readlines():
@@ -103,8 +106,15 @@ class DataGenerator(torch.utils.data.IterableDataset):
         for sentence in self.file.readlines():
             for c in sentence:
                 if(c not in ret_dict and c != '\n'):
-                    ret_dict.update({c: len(ret_dict)})
+                    if(len(self.freq_dict.keys()) < 5 ):
+                        ret_dict.update({c: len(ret_dict)})
+                    else:
+                        if(self.freq_dict[c] > self.threshold):
+                            ret_dict.update({c: len(ret_dict)})
+
         self.file.seek(0)
+        if(len(self.freq_dict)>5):
+            ret_dict.update({"RANDOM": len(ret_dict)})
         return ret_dict
         
 

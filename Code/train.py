@@ -12,8 +12,6 @@ def get_key(dictOfElements, valueToFind):
         if item[1] == valueToFind:
             listOfKeys.append(item[0])
     
-    if(len(listOfKeys) == 0):
-        print("CASINOOOOOOOOOOOOOOO")
     return  listOfKeys
 
 torch.set_default_tensor_type('torch.cuda.FloatTensor')
@@ -44,7 +42,7 @@ for i in zip(train_generator, labels_generator):
 '''
 
 
-bw = BatchWrapper(train_dataset_path, labels_dataset_path)
+bw = BatchWrapper(train_dataset_path, labels_dataset_path, monograms=True)
 
 alphabet_size = len(bw.train_gen.chars_dict)
 output_syms = len(bw.labels_gen.chars_dict)
@@ -58,11 +56,12 @@ print("Alphabet size: %d \nOutput_syms: %d\nSentences_max_length: %d" % (alphabe
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 model = TokNet(alphabet_size, sentences_max_length, output_syms)
 model.cuda()
-optimizer = torch.optim.SGD(model.parameters(), lr=0.02)
+#optimizer = torch.optim.SGD(model.parameters(), lr=0.02)
+optimizer = torch.optim.Adam(model.parameters(), lr=0.02)
 
 
+dataloader = torch.utils.data.DataLoader(bw, batch_size=256) 
 
-dataloader = torch.utils.data.DataLoader(bw, batch_size=256) #it batches data for us
 
 '''
 for a in dataloader:
@@ -71,6 +70,6 @@ for a in dataloader:
 '''
 
 t = Trainer(model, optimizer, device)
-t.train(dataloader, epochs=10, sentences_max_length=sentences_max_length)
+t.train(dataloader, epochs=100, sentences_max_length=sentences_max_length)
 
 

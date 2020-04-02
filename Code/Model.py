@@ -1,5 +1,6 @@
 import torch.nn as nn
 import torch.nn.functional as F
+import torch
 
 
 class TokNet(nn.Module):
@@ -12,15 +13,22 @@ class TokNet(nn.Module):
         self.alphabet_size = alphabet_size
         self.output_syms = output_syms
         
+        self.w1 = 64
+        self.w2 = 64
         
      
-        self.fc1 = nn.Linear(self.alphabet_size, 512)
+        self.fc1 = nn.Linear(self.alphabet_size, self.w1)
         self.relu = nn.ReLU()
-        self.fc2 = nn.Linear(512, 512)
-        self.fc3 = nn.Linear(512, self.output_syms)
+        self.fc2 = nn.Linear(self.w1, self.w2)
+        self.fc3 = nn.Linear(self.w2, self.output_syms)
         #self.ls = nn.Softmax(dim=1)
-        self.loss_function = nn.CrossEntropyLoss()
-        
+        #in the dev: 577530 chars
+        #B: 0.186437
+        #I: 0.66035
+        #S: 0.153528
+        cross_entropy_weights = torch.Tensor([0.60, 0.45, 0.10])
+        #self.loss_function = nn.CrossEntropyLoss(weight=cross_entropy_weights)
+        self.loss_function = nn.MSELoss()
 
 
     def forward(self, x):
@@ -29,15 +37,3 @@ class TokNet(nn.Module):
         o = self.fc3(hid)
         
         return o
-        
-
-        '''
-        l1 = self.linear1(input_idx)  # compute the embeddings for the input words
-        l2 = F.relu(self.linear2(l1))
-        #l3 = F.relu(self.linear3(l2))
-        o = self.output(l2).view(self.sentences_max_length, self.output_syms).clone().detach().requires_grad_(True)
-        #o = F.softmax(self.output(l2).view(self.sentences_max_length, self.output_syms), dim=1)
-        o = F.softmax(o, dim=1)
-        '''
-        
-        
