@@ -14,8 +14,8 @@ validation_dataset_path = "../Dataset/en.wiki.gold.dev"
 
 sentences_max_length = 1
 
-train_generator = DataGenerator(train_dataset_path, sentences_max_length, tensor=True)
-eval_generator = DataGenerator(labels_dataset_path, sentences_max_length, tensor=True, labels=True)
+train_generator = DataGenerator(train_dataset_path, sentences_max_length, tensor=True, monograms=True)
+eval_generator = DataGenerator(labels_dataset_path, sentences_max_length, tensor=True, monograms=True)
 alphabet_size = train_generator.get_dictionary_size()
 output_syms = eval_generator.get_dictionary_size()
 
@@ -51,7 +51,8 @@ for i in zip(train_generator, eval_generator):
             OK+=1
         
     
-
+    if(n_int >= 100000):
+        break
   
 print(n_int)
 print(out_dict)

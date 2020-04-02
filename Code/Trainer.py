@@ -34,17 +34,12 @@ class Trainer():
                 
                 output = self.model(x)
 
-                
-                
-
                 #print(output)
                 #print("END")
                 
                 y = torch.tensor([elem.argmax() for elem in y.view(-1, dataloader.dataset.labels_gen.get_dictionary_size())])
                 y = y.view(-1).long()
-                
-                for elem in output:
-                   print(elem.argmax())
+              
                 
                 loss = self.model.loss_function(output, y)
                 loss.backward()

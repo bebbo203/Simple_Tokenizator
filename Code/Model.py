@@ -15,7 +15,7 @@ class TokNet(nn.Module):
         
      
         self.fc1 = nn.Linear(self.alphabet_size, 512)
-        self.sig = nn.Sigmoid()
+        self.relu = nn.ReLU()
         self.fc2 = nn.Linear(512, 512)
         self.fc3 = nn.Linear(512, self.output_syms)
         #self.ls = nn.Softmax(dim=1)
@@ -24,8 +24,8 @@ class TokNet(nn.Module):
 
 
     def forward(self, x):
-        inp = self.fc1(x)
-        hid = self.sig(self.fc2(inp))
+        inp = self.relu(self.fc1(x))
+        hid = self.relu(self.fc2(inp))
         o = self.fc3(hid)
         
         return o

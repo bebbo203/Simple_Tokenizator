@@ -51,6 +51,8 @@ output_syms = len(bw.labels_gen.chars_dict)
 
 
 
+
+
 print("Alphabet size: %d \nOutput_syms: %d\nSentences_max_length: %d" % (alphabet_size, output_syms, sentences_max_length))
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -60,11 +62,13 @@ optimizer = torch.optim.SGD(model.parameters(), lr=0.02)
 
 
 
-dataloader = torch.utils.data.DataLoader(bw, batch_size=1) #it batches data for us
+dataloader = torch.utils.data.DataLoader(bw, batch_size=256) #it batches data for us
 
+'''
 for a in dataloader:
     print(get_key(bw.train_gen.chars_dict, a['inputs'].argmax()))
     print(get_key(bw.labels_gen.chars_dict, a['targets'].argmax()))
+'''
 
 t = Trainer(model, optimizer, device)
 t.train(dataloader, epochs=10, sentences_max_length=sentences_max_length)

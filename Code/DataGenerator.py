@@ -5,12 +5,12 @@ import codecs
 
 class DataGenerator(torch.utils.data.IterableDataset):
 
-    def __init__(self, path, sentences_max_length, tensor=True, labels=False):
+    def __init__(self, path, sentences_max_length, tensor=True, monograms=False):
         self.file = self.open_file(path)
         self.sentences_max_length_computed = self.longest_sentence_size()
         self.tensor = tensor
-        self.labels = labels
-        self.threshold = 0
+        self.monograms = monograms
+        self.threshold = 150
 
         if(sentences_max_length == 0):
             self.sentences_max_length = self.sentences_max_length_computed
@@ -19,7 +19,7 @@ class DataGenerator(torch.utils.data.IterableDataset):
         
         self.freq_dict = self.frequencies_dict()
 
-        if(self.labels == False):
+        if(self.monograms == False):
             self.chars_dict = self.create_chars_dict_bigrams()
         else:
             self.chars_dict = self.create_chars_dict()
@@ -39,43 +39,23 @@ class DataGenerator(torch.utils.data.IterableDataset):
                     reduced = line[start:start+self.sentences_max_length]
                     yield reduced
         else:   
-            if(self.labels):
+            if(self.monograms):
                 for _line in self.file.readlines():
                     line = _line
-                    for start in range(0, len(line), self.sentences_max_length):
-                        reduced = line[start:start+self.sentences_max_length]
-                        out = torch.zeros(self.sentences_max_length, len(self.chars_dict))
-                        
-                        
-                        for i,char in enumerate(reduced):
-                            if(char in self.chars_dict):
-                                out[i][self.chars_dict[char]] = 1
-                        '''
-                        if(len(reduced) < self.sentences_max_length):
-                            for i in range(self.sentences_max_length - len(reduced)):
-                                out[i + len(reduced)][self.chars_dict["#"]] = 1
-                        '''
-                        
+                    for c in range(len(line)):
+                        if(line[c] in self.chars_dict.keys()):
+                            out = torch.zeros(self.sentences_max_length, len(self.chars_dict))
+                            out[0][self.chars_dict[line[c]]] = 1
                         yield out.flatten().view(self.sentences_max_length * len(self.chars_dict))
             else:
                 for _line in self.file.readlines():
                     line = _line
-                    for start in range(0, len(line), self.sentences_max_length):
-                        reduced = line[start:start+self.sentences_max_length]
-                        out = torch.zeros(self.sentences_max_length, len(self.chars_dict))
-                    
-                        for i in range(len(reduced)-1):
-                            if(reduced[i] != "\n"):
-                                bigram = str(reduced[i] + reduced[i+1])
-                                if(bigram in self.chars_dict.keys()):
-                                    out[i][self.chars_dict[bigram]] = 1
-                            
-                            
-                        '''
-                        if(len(reduced) < self.sentences_max_length):
-                            for i in range( self.sentences_max_length - len(reduced)):
-                                out[i + len(reduced) - 1][self.chars_dict["PAD"]] = 1
-                        '''
+                    for c in range(len(line)-1):
+                        bigram = str(line[c] + line[c+1])
+                        
+                        if(bigram in self.chars_dict.keys()):
+                            out = torch.zeros(self.sentences_max_length, len(self.chars_dict))
+                            out[0][self.chars_dict[bigram]] = 1
                         yield out.flatten().view(self.sentences_max_length * len(self.chars_dict))
                             
 
@@ -109,16 +89,12 @@ class DataGenerator(torch.utils.data.IterableDataset):
     
     def create_chars_dict_bigrams(self):
         ret_dict = {}
-        
         for sentence in self.file.readlines():
             for i in range(len(sentence)-1):
-                #if(self.freq_dict[sentence[i]] >= self.threshold):
                 if(sentence[i] != '\n'):
                     bigram = str(sentence[i] + sentence[i+1])
-                    if(bigram not in ret_dict):
+                    if(bigram not in ret_dict and self.freq_dict[sentence[i]] > self.threshold ):
                         ret_dict.update({bigram: len(ret_dict)})
-        
-        #ret_dict.update({"PAD": len(ret_dict)})
         self.file.seek(0)
         return ret_dict
     
@@ -128,7 +104,6 @@ class DataGenerator(torch.utils.data.IterableDataset):
             for c in sentence:
                 if(c not in ret_dict and c != '\n'):
                     ret_dict.update({c: len(ret_dict)})
-        #ret_dict.update({"#": len(ret_dict)})
         self.file.seek(0)
         return ret_dict
         
