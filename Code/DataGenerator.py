@@ -1,6 +1,7 @@
 import torch.nn as nn
 import torch
 import codecs
+from Params import Params
 
 
 class DataGenerator(torch.utils.data.IterableDataset):
@@ -9,13 +10,11 @@ class DataGenerator(torch.utils.data.IterableDataset):
         self.file = self.open_file(path)
         self.sentences_max_length_computed = self.longest_sentence_size()
         self.tensor = tensor
-        self.monograms = monograms
-        self.threshold = 5
+        self.monograms = Params.monograms
+        self.threshold = Params.threshold
 
-        if(sentences_max_length == 0):
-            self.sentences_max_length = self.sentences_max_length_computed
-        else:
-            self.sentences_max_length = sentences_max_length
+      
+        self.sentences_max_length = Params.sentence_max_length
         
         self.freq_dict = self.frequencies_dict()
 
@@ -29,7 +28,6 @@ class DataGenerator(torch.utils.data.IterableDataset):
         
     
     def __iter__(self):
-        #n_words_in_sentence * one_hot_encoding_dim 
         
         if(self.tensor == False):  
                    
@@ -41,12 +39,11 @@ class DataGenerator(torch.utils.data.IterableDataset):
             if(self.monograms):
                 for _line in self.file.readlines():
                     line = _line
-                    for c in range(len(line)):
+                    for c in range(len(line) -1):
+                        out = torch.zeros(self.sentences_max_length, len(self.chars_dict))
                         if(line[c] in self.chars_dict.keys()):
-                            out = torch.zeros(self.sentences_max_length, len(self.chars_dict))
                             out[0][self.chars_dict[line[c]]] = 1
-                        elif(line[c] != "\n"):
-                            out = torch.zeros(self.sentences_max_length, len(self.chars_dict))
+                        else:
                             out[0][self.chars_dict["RANDOM"]] = 1
 
                         yield out.flatten().view(self.sentences_max_length * len(self.chars_dict))
