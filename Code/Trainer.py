@@ -5,6 +5,7 @@ import torch
 import torch.nn as nn
 import os
 import time
+from Params import Params
 import Evaluator
 
 
@@ -83,20 +84,25 @@ class Trainer():
 
     
     def eval(self):
-        train_dataset_path = "../Dataset/en.wiki.sentences.dev"
-        labels_dataset_path = "../Dataset/en.wiki.gold.dev"
-        train_generator = DataGenerator(train_dataset_path, 1, tensor=True, monograms=True)
-        eval_generator = DataGenerator(labels_dataset_path, 1, tensor=True, monograms=True)
+        train_dataset_path = Params.train_dataset_path
+        labels_dataset_path = Params.labels_dataset_path
+        train_generator = DataGenerator(train_dataset_path, Params.sentences_max_length, tensor=True, monograms=Params.monograms)
+        eval_generator = DataGenerator(labels_dataset_path, Params.sentences_max_length, tensor=True, monograms=True)
         self.model.eval()
         n_int = 0
         OK = 0
+
+        
         for i in zip(train_generator, eval_generator):
-            x = i[0]
+            x = i[0].view(1, train_generator.get_dictionary_size() * Params.n_grams)
             o = self.model(x)
             y = i[1].view(train_generator.sentences_max_length, eval_generator.get_dictionary_size())
-        
 
-            o = o.view(train_generator.sentences_max_length, eval_generator.get_dictionary_size())
+
+
+            o = o.view(-1, eval_generator.get_dictionary_size())
+
+        
             
             for elem in zip(o, y):
                 n_int += 1

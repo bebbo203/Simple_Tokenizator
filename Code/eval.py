@@ -5,6 +5,7 @@ from Model import TokNet
 import torch
 import torch.nn as nn
 import os
+from Params import Params
 
 train_dataset_path = "../Dataset/en.wiki.sentences.dev"
 labels_dataset_path = "../Dataset/en.wiki.gold.dev"
@@ -20,16 +21,16 @@ def get_key(dictOfElements, valueToFind):
     return  listOfKeys
 
 
-sentences_max_length = 1
 
-train_generator = DataGenerator(train_dataset_path, sentences_max_length, tensor=True, monograms=True)
-eval_generator = DataGenerator(labels_dataset_path, sentences_max_length, tensor=True, monograms=True)
-text_generator = DataGenerator(labels_dataset_path, sentences_max_length, tensor=False, monograms=True)
+
+train_generator = DataGenerator(train_dataset_path, Params.sentences_max_length, tensor=True, monograms=Params.monograms)
+eval_generator = DataGenerator(labels_dataset_path, Params.sentences_max_length, tensor=True, monograms=True)
+
 alphabet_size = train_generator.get_dictionary_size()
 output_syms = eval_generator.get_dictionary_size()
 
 chars_dict = eval_generator.create_chars_dict()
-model = TokNet(alphabet_size, sentences_max_length, output_syms)
+model = TokNet(alphabet_size, Params.sentences_max_length, output_syms)
 
 file_name = "state_0.pt"
 write = 0
@@ -53,10 +54,13 @@ out_dict_gold = {'0': 0, '1': 0, '2':0}
 s_pred = ""
 s_gold = ""
 for i in zip(train_generator, eval_generator):
-    x = i[0]
+    
+
+    x = i[0].view(1, alphabet_size * Params.n_grams)
     o = model(x)
     y = i[1].view(train_generator.sentences_max_length, eval_generator.get_dictionary_size())
-   
+    
+    
 
     o = o.view(train_generator.sentences_max_length, eval_generator.get_dictionary_size())
     

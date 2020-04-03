@@ -10,18 +10,18 @@ class DataGenerator(torch.utils.data.IterableDataset):
         self.file = self.open_file(path)
         self.sentences_max_length_computed = self.longest_sentence_size()
         self.tensor = tensor
-        self.monograms = Params.monograms
+        self.monograms = monograms
         self.threshold = Params.threshold
-
+        self.unknow = "UNK"
       
-        self.sentences_max_length = Params.sentence_max_length
+        self.sentences_max_length = Params.sentences_max_length
         
         self.freq_dict = self.frequencies_dict()
 
-        if(self.monograms == False):
-            self.chars_dict = self.create_chars_dict_bigrams()
-        else:
-            self.chars_dict = self.create_chars_dict()
+    
+        self.chars_dict = self.create_chars_dict()
+
+        
         
 
             
@@ -36,27 +36,20 @@ class DataGenerator(torch.utils.data.IterableDataset):
                 for c in line:
                     yield c
         else:   
-            if(self.monograms):
-                for _line in self.file.readlines():
-                    line = _line
-                    for c in range(len(line) -1):
-                        out = torch.zeros(self.sentences_max_length, len(self.chars_dict))
-                        if(line[c] in self.chars_dict.keys()):
-                            out[0][self.chars_dict[line[c]]] = 1
+            for _line in self.file.readlines():
+                line = _line
+                for i in range(len(line)-Params.n_grams):
+                    bigram = line[i:i+Params.n_grams]
+                    out = torch.zeros(Params.n_grams, len(self.chars_dict))
+                    
+                    
+                    for i, c in enumerate(bigram):
+                        if(c in self.chars_dict.keys()):
+                            out[i][self.chars_dict[c]] = 1
                         else:
-                            out[0][self.chars_dict["RANDOM"]] = 1
-
-                        yield out.flatten().view(self.sentences_max_length * len(self.chars_dict))
-            else:
-                for _line in self.file.readlines():
-                    line = _line
-                    for c in range(len(line)-1):
-                        bigram = str(line[c] + line[c+1])
+                            out[i][self.chars_dict[self.unknow]] = 1
                         
-                        if(bigram in self.chars_dict.keys()):
-                            out = torch.zeros(self.sentences_max_length, len(self.chars_dict))
-                            out[0][self.chars_dict[bigram]] = 1
-                        yield out.flatten().view(self.sentences_max_length * len(self.chars_dict))
+                    yield out.flatten().view(self.sentences_max_length * len(self.chars_dict) * Params.n_grams)
                             
 
              
@@ -111,7 +104,7 @@ class DataGenerator(torch.utils.data.IterableDataset):
 
         self.file.seek(0)
         if(len(self.freq_dict)>5):
-            ret_dict.update({"RANDOM": len(ret_dict)})
+            ret_dict.update({ self.unknow : len(ret_dict)})
         return ret_dict
         
 
