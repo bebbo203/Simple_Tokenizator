@@ -13,11 +13,11 @@ class TokNet(nn.Module):
         self.alphabet_size = alphabet_size
         self.output_syms = output_syms
         
-        self.w1 = 2
-        self.w2 = 2
+        self.w1 = 32
+        self.w2 = 32
         
      
-        self.fc1 = nn.Linear(self.alphabet_size * Params.n_grams, self.w1)
+        self.fc1 = nn.Linear(self.alphabet_size * Params.monograms, self.w1)
         self.relu = nn.ReLU()
         self.fc2 = nn.Linear(self.w1, self.w2)
         self.fc3 = nn.Linear(self.w2, self.output_syms)
@@ -26,14 +26,15 @@ class TokNet(nn.Module):
         #B: 0.186437
         #I: 0.66035
         #S: 0.153528
-        #cross_entropy_weights = torch.Tensor([0.60, 0.45, 0.10])
-        #self.loss_function = nn.CrossEntropyLoss(weight=cross_entropy_weights)
-        self.loss_function = nn.MSELoss()
+        cross_entropy_weights = torch.Tensor([1, 1, 1])
+        self.loss_function = nn.CrossEntropyLoss(weight=cross_entropy_weights)
+        #self.loss_function = nn.MSELoss()
 
 
     def forward(self, x):
         inp = self.relu(self.fc1(x))
         hid = self.relu(self.fc2(inp))
-        o = self.softmax(self.fc3(hid))
-        
+        #o = self.softmax(self.fc3(hid))
+        o = self.fc3(hid)
+
         return o

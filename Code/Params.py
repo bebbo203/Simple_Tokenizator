@@ -1,8 +1,11 @@
 class Params():
     train_dataset_path = "../Dataset/en.wiki.sentences.dev"
     labels_dataset_path = "../Dataset/en.wiki.gold.dev"
-    monograms = False
-    batch_size = 256
+    train_dataset_path_eval = "../Dataset/en.wiki.sentences.dev"
+    labels_dataset_path_eval = "../Dataset/en.wiki.gold.dev"
+    monograms = 1
+    batch_size = 126
     sentences_max_length = 1
-    threshold = 2
-    n_grams = 1
+    threshold = 100
+    prob_shuffle = 0.5
+    

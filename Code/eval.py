@@ -24,7 +24,7 @@ def get_key(dictOfElements, valueToFind):
 
 
 train_generator = DataGenerator(train_dataset_path, Params.sentences_max_length, tensor=True, monograms=Params.monograms)
-eval_generator = DataGenerator(labels_dataset_path, Params.sentences_max_length, tensor=True, monograms=True)
+eval_generator = DataGenerator(labels_dataset_path, Params.sentences_max_length, tensor=True, monograms=1)
 
 alphabet_size = train_generator.get_dictionary_size()
 output_syms = eval_generator.get_dictionary_size()
@@ -56,7 +56,7 @@ s_gold = ""
 for i in zip(train_generator, eval_generator):
     
 
-    x = i[0].view(1, alphabet_size * Params.n_grams)
+    x = i[0].view(1, alphabet_size * Params.monograms)
     o = model(x)
     y = i[1].view(train_generator.sentences_max_length, eval_generator.get_dictionary_size())
     

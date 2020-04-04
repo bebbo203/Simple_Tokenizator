@@ -17,12 +17,15 @@ class Trainer():
         self.model = model
         self.optimizer = optimizer
         self.device = device
+        self.train_dict = None 
+        self.labels_dict = None
 
     
     def train(self, dataloader, epochs = 1, sentences_max_length = 0):
         train_loss = 0.0
         self.model = self.model.float()
-        
+        self.train_dict = dataloader.dataset.train_gen.chars_dict
+        self.labels_dict = dataloader.dataset.labels_gen.chars_dict
         
         for epoch in range(epochs):
             epoch_loss = 0.0
@@ -39,10 +42,10 @@ class Trainer():
                 #print(output)
                 #print("END")
                 
-                #y = torch.tensor([elem.argmax() for elem in y.view(-1, dataloader.dataset.labels_gen.get_dictionary_size())])
-                #y = y.view(-1).long()
-              
-                
+                y = torch.tensor([elem.argmax() for elem in y.view(-1, dataloader.dataset.labels_gen.get_dictionary_size())])
+                y = y.view(-1).long()
+
+                               
                 loss = self.model.loss_function(output, y)
                 loss.backward()
                 self.optimizer.step()
@@ -84,17 +87,17 @@ class Trainer():
 
     
     def eval(self):
-        train_dataset_path = Params.train_dataset_path
-        labels_dataset_path = Params.labels_dataset_path
-        train_generator = DataGenerator(train_dataset_path, Params.sentences_max_length, tensor=True, monograms=Params.monograms)
-        eval_generator = DataGenerator(labels_dataset_path, Params.sentences_max_length, tensor=True, monograms=True)
+        train_dataset_path = Params.train_dataset_path_eval
+        labels_dataset_path = Params.labels_dataset_path_eval
+        train_generator = DataGenerator(train_dataset_path, Params.sentences_max_length, tensor=True, monograms=Params.monograms, train_dict = self.train_dict)
+        eval_generator = DataGenerator(labels_dataset_path, Params.sentences_max_length, tensor=True, monograms=1, train_dict = self.labels_dict)
         self.model.eval()
         n_int = 0
         OK = 0
 
         
         for i in zip(train_generator, eval_generator):
-            x = i[0].view(1, train_generator.get_dictionary_size() * Params.n_grams)
+            x = i[0].view(1, train_generator.get_dictionary_size() * Params.monograms)
             o = self.model(x)
             y = i[1].view(train_generator.sentences_max_length, eval_generator.get_dictionary_size())
 
@@ -111,7 +114,7 @@ class Trainer():
                     OK+=1
                 
             
-            if(n_int >= 10000):
+            if(n_int >= 100000):
                 break
         
         return OK/n_int

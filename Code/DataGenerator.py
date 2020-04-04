@@ -6,11 +6,15 @@ from Params import Params
 
 class DataGenerator(torch.utils.data.IterableDataset):
 
-    def __init__(self, path, sentences_max_length, tensor=True, monograms=False):
+    def __init__(self, path, sentences_max_length, tensor=True, monograms=1, train_dict = None):
         self.file = self.open_file(path)
         self.sentences_max_length_computed = self.longest_sentence_size()
         self.tensor = tensor
+
+        
         self.monograms = monograms
+
+        
         self.threshold = Params.threshold
         self.unknow = "UNK"
       
@@ -18,8 +22,10 @@ class DataGenerator(torch.utils.data.IterableDataset):
         
         self.freq_dict = self.frequencies_dict()
 
-    
-        self.chars_dict = self.create_chars_dict()
+        if(train_dict):
+            self.chars_dict = train_dict
+        else:
+            self.chars_dict = self.create_chars_dict()
 
         
         
@@ -38,9 +44,9 @@ class DataGenerator(torch.utils.data.IterableDataset):
         else:   
             for _line in self.file.readlines():
                 line = _line
-                for i in range(len(line)-Params.n_grams):
-                    bigram = line[i:i+Params.n_grams]
-                    out = torch.zeros(Params.n_grams, len(self.chars_dict))
+                for i in range(len(line)-self.monograms):
+                    bigram = line[i:i+self.monograms]
+                    out = torch.zeros(self.monograms, len(self.chars_dict))
                     
                     
                     for i, c in enumerate(bigram):
@@ -49,7 +55,7 @@ class DataGenerator(torch.utils.data.IterableDataset):
                         else:
                             out[i][self.chars_dict[self.unknow]] = 1
                         
-                    yield out.flatten().view(self.sentences_max_length * len(self.chars_dict) * Params.n_grams)
+                    yield out.flatten().view(self.sentences_max_length * len(self.chars_dict) * self.monograms)
                             
 
              
