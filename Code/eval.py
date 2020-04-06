@@ -53,6 +53,8 @@ out_dict_gold = {'0': 0, '1': 0, '2':0}
 
 s_pred = ""
 s_gold = ""
+
+conf = [[0,0,0],[0,0,0],[0,0,0]]
 for i in zip(train_generator, eval_generator):
     
 
@@ -86,6 +88,7 @@ for i in zip(train_generator, eval_generator):
         val = elem[0].argmax()
         out_dict_pred.update({str(int(val)): out_dict_pred[str(int(val))]+1})
         out_dict_gold.update({str(int(elem[1].argmax())): out_dict_gold[str(int(elem[1].argmax()))]+1})
+        conf[int(val)][int(elem[1].argmax())] += 1
         if val == elem[1].argmax():
             OK+=1
         
@@ -96,4 +99,8 @@ for i in zip(train_generator, eval_generator):
 
 print("PRED: " + str(out_dict_pred))
 print("GOLD: " + str(out_dict_gold))
+print("##################################")
+for elem in conf:
+    print("%5d %5d %5d" % (elem[0],elem[1], elem[2]))
+print("##################################")
 print("Accuracy: " + str(OK/n_int))

@@ -45,13 +45,13 @@ model.cuda()
 optimizer = torch.optim.Adam(model.parameters(), lr=0.02 )
 
 #dataloader = torch.utils.data.DataLoader(bw, batch_size=Params.batch_size)
-bd = BalancedDataset(Params.train_dataset_path, Params.labels_dataset_path, monograms = Params.monograms, batch_size=Params.batch_size)
+dataloader = BalancedDataset(Params.train_dataset_path, Params.labels_dataset_path, monograms = Params.monograms, batch_size=Params.batch_size)
 
 
 
 
 
 t = Trainer(model, optimizer, device)
-t.train(bd, epochs=100, sentences_max_length=Params.sentences_max_length)
+t.train(dataloader, epochs=100, sentences_max_length=Params.sentences_max_length)
 
 

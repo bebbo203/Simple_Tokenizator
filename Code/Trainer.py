@@ -28,6 +28,7 @@ class Trainer():
         self.labels_dict = dataloader.dataset.labels_gen.chars_dict
         
         for epoch in range(epochs):
+            self.model.train()
             epoch_loss = 0.0
             len_train = 0
             start_time = time.time()
@@ -38,6 +39,7 @@ class Trainer():
                 
                 
                 output = self.model(x)
+
 
                 #print(output)
                 #print("END")
@@ -75,7 +77,7 @@ class Trainer():
             
             
             accuracy = self.eval()
-            self.model.train()
+            
             
             
             print('Epoch:{} avg_loss = {:0.4f} tr_acc = {:0.4f} time_elapsed = {:.2f}s'.format(epoch, avg_epoch_loss, accuracy, time.time() - start_time))
